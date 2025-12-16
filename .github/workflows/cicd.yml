@@ -42,3 +42,10 @@ jobs:
           echo "Server failed to start"
           kill $PID || true
           exit 1
+
+      # Deploy - giữ server chạy
+      - name: Deploy server
+        run: |
+          pkill -f "java simpleWeb" || true
+          nohup java simpleWeb > server.log 2>&1 &
+          echo "Server deployed on port 8080"
