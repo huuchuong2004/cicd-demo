@@ -47,5 +47,14 @@ jobs:
       - name: Deploy server
         run: |
           pkill -f "java simpleWeb" || true
+          sleep 1
+          cd ${{ github.workspace }}
           nohup java simpleWeb > server.log 2>&1 &
-          echo "Server deployed on port 8080"
+          sleep 2
+          if curl -fs http://localhost:8080/health; then
+            echo "✅ Server deployed successfully on port 8080"
+          else
+            echo "❌ Server failed to start"
+            cat server.log
+            exit 1
+          fi
