@@ -6,7 +6,8 @@ on:
 
 jobs:
   build-and-run:
-    runs-on: ubuntu-latest # Use GitHub-hosted runner
+    runs-on: self-hosted
+# Use GitHub-hosted runner
 
     steps:
     # Bước check out code về runner
