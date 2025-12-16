@@ -1,0 +1,43 @@
+name: Java CI (no build tools)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-run:
+    runs-on: seft-hosted # Use self-hosted runner
+
+    steps:
+    # Bước check out code về runner
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # Bước compile và chạy smoke test
+      - name: Compile
+        run: javac simpleWeb.java
+
+      # Bước chạy smoke test
+      - name: Smoke test server
+        run: |
+          java simpleWeb &
+          PID=$!
+
+          for i in {1..20}; do
+            if curl -fs http://localhost:8080/health; then
+              echo "Server OK"
+              kill $PID
+              exit 0
+            fi
+            sleep 0.5
+          done
+
+          echo "Server failed to start"
+          kill $PID || true
+          exit 1
