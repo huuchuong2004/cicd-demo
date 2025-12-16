@@ -49,12 +49,14 @@ jobs:
           pkill -f "java simpleWeb" || true
           sleep 1
           cd ${{ github.workspace }}
-          nohup java simpleWeb > server.log 2>&1 &
+          nohup java simpleWeb > /tmp/simpleweb.log 2>&1 &
+          disown
           sleep 2
           if curl -fs http://localhost:8080/health; then
             echo "✅ Server deployed successfully on port 8080"
+            echo "Server PID: $(pgrep -f 'java simpleWeb')"
           else
             echo "❌ Server failed to start"
-            cat server.log
+            cat /tmp/simpleweb.log
             exit 1
           fi
