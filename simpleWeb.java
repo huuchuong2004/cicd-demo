@@ -14,7 +14,7 @@ public class simpleWeb {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
         server.createContext("/", exchange ->
-                respond(exchange, 200, "Hello from pure Java!\n"));
+                respond(exchange, 200, "Hello from CI/CD Pipeline!\n"));
 
         server.createContext("/health", exchange ->
                 respond(exchange, 200, "OK\n"));
