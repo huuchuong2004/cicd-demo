@@ -43,22 +43,30 @@ jobs:
           kill $PID || true
           exit 1
 
-      # Deploy - giữ server chạy
-      - name: Deploy server
+      # Deploy - start server in tmux session (keeps running after job)
+      - name: Deploy server (tmux)
         run: |
-          pkill -f "java simpleWeb" || true
-          sleep 1
+          # Ensure tmux is installed
+          if ! command -v tmux >/dev/null 2>&1; then
+            echo "tmux not found, installing..."
+            sudo apt-get update && sudo apt-get install -y tmux
+          fi
+
           cd ${{ github.workspace }}
 
-          setsid nohup java simpleWeb > /tmp/simpleweb.log 2>&1 < /dev/null &
+          # kill old session if exists
+          tmux kill-session -t simpleweb || true
+
+          # start new detached tmux session running the server
+          tmux new -d -s simpleweb "cd ${{ github.workspace }} && /usr/bin/java simpleWeb > /tmp/simpleweb.log 2>&1"
 
           sleep 3
           if curl -fs http://localhost:8080/health; then
-            echo "✅ Server deployed successfully on port 8080"
-            echo "Server PID: $(pgrep -f 'java simpleWeb')"
+            echo "✅ Server deployed in tmux session 'simpleweb'"
+            tmux ls || true
           else
             echo "❌ Server failed to start"
-            cat /tmp/simpleweb.log
+            tail -n +1 /tmp/simpleweb.log || true
             exit 1
           fi
 
