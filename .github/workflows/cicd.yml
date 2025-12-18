@@ -43,38 +43,25 @@ jobs:
           kill $PID || true
           exit 1
 
-      # Deploy - start server in tmux session (keeps running after job)
-      - name: Deploy server (tmux)
+      # Deploy - restart systemd service (assumes `simpleweb` service is installed on runner)
+      - name: Deploy - restart systemd service
         run: |
-          # Ensure tmux is installed
-          if ! command -v tmux >/dev/null 2>&1; then
-            echo "tmux not found, installing..."
-            sudo apt-get update && sudo apt-get install -y tmux
-          fi
-
+          set -eux
           cd ${{ github.workspace }}
 
-          # kill old session if exists
-          tmux kill-session -t simpleweb || true
+          # compile before restarting
+          javac simpleWeb.java || true
 
-          # start new detached tmux session running the server
-          tmux new -d -s simpleweb "cd ${{ github.workspace }} && /usr/bin/java simpleWeb > /tmp/simpleweb.log 2>&1"
+          # reload systemd (in case unit changed), restart service
+          sudo systemctl daemon-reload || true
+          sudo systemctl restart simpleweb
 
-          sleep 3
-          if curl -fs http://localhost:8080/health; then
-            echo "✅ Server deployed in tmux session 'simpleweb'"
-            tmux ls || true
-          else
-            echo "❌ Server failed to start"
-            tail -n +1 /tmp/simpleweb.log || true
-            exit 1
-          fi
-      - name: Debug info (tmux, processes, logs)
-        run: |
-          echo "--- tmux sessions ---"
-          tmux ls || true
-          echo "--- java processes ---"
-          ps aux | grep java | grep -v grep || true
-          echo "--- last 100 lines of server log ---"
-          tail -n 100 /tmp/simpleweb.log || true
+          # wait a moment and show status/logs for debugging
+          sleep 2
+          echo "--- systemctl status simpleweb ---"
+          sudo systemctl status simpleweb --no-pager || true
+          echo "--- recent journal for simpleweb ---"
+          sudo journalctl -u simpleweb -n 200 --no-pager || true
+          echo "--- listener on 8080 ---"
+          sudo ss -tlnp | grep 8080 || true
 
