@@ -69,4 +69,12 @@ jobs:
             tail -n +1 /tmp/simpleweb.log || true
             exit 1
           fi
+      - name: Debug info (tmux, processes, logs)
+        run: |
+          echo "--- tmux sessions ---"
+          tmux ls || true
+          echo "--- java processes ---"
+          ps aux | grep java | grep -v grep || true
+          echo "--- last 100 lines of server log ---"
+          tail -n 100 /tmp/simpleweb.log || true
 
