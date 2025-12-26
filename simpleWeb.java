@@ -56,7 +56,7 @@ public class simpleWeb {
                 });
 
                 server.createContext("/health", exchange ->
-                                respond(exchange, 200, "OK\n"));
+                                respond(exchange, 200, "OK Nha \n"));
 
                 server.createContext("/api/message", exchange -> {
                         String json = "{\"message\": \"Hello from CI/CD Pipeline (JSON)\"}";
